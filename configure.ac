@@ -29,5 +29,7 @@ AC_SUBST(SYMBOL_VISIBILITY)
 AC_OUTPUT(
         libasn1c.pc
         src/Makefile
+        include/Makefile
+        include/asn1c/Makefile
         Makefile)
 

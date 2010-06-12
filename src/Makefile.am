@@ -3,7 +3,7 @@
 # documentation before making any modification
 LIBVERSION=0:0:0
 
-INCLUDES = $(all_includes) -I$(top_srcdir)/include
+INCLUDES = $(all_includes) -I$(top_srcdir)/include/asn1c
 AM_CFLAGS = -fPIC -Wall
 
 lib_LTLIBRARIES = libasn1c.la
