@@ -22,7 +22,7 @@ asn_TYPE_descriptor_t asn_DEF_NativeEnumerated = {
 	"ENUMERATED",			/* The ASN.1 type is still ENUMERATED */
 	"ENUMERATED",
 	NativeInteger_free,
-	NativeInteger_print,
+	NativeEnumerated_print,
 	asn_generic_no_constraint,
 	NativeInteger_decode_ber,
 	NativeInteger_encode_der,
@@ -205,3 +205,30 @@ NativeEnumerated_encode_uper(asn_TYPE_descriptor_t *td,
 	_ASN_ENCODED_OK(er);
 }
 
+int
+NativeEnumerated_print(asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
+	asn_app_consume_bytes_f *cb, void *app_key) {
+	asn_INTEGER_specifics_t *specs=(asn_INTEGER_specifics_t *)td->specifics;
+	const long *native = (const long *)sptr;
+	char scratch[256];
+	int ret;
+
+	(void)td;	/* Unused argument */
+	(void)ilevel;	/* Unused argument */
+
+	if(native) {
+		const asn_INTEGER_enum_map_t *map = INTEGER_map_value2enum(specs, *native);
+		if (map && map->enum_len && map->enum_name) {
+			ret = snprintf(scratch, sizeof(scratch),
+				"%s", map->enum_name);
+		} else {
+			ret = snprintf(scratch, sizeof(scratch),
+				(specs && specs->field_unsigned)
+				? "%lu" : "%ld", *native);
+		}
+		assert(ret > 0 && (size_t)ret < sizeof(scratch));
+		return (cb(scratch, ret, app_key) < 0) ? -1 : 0;
+	} else {
+		return (cb("<absent>", 8, app_key) < 0) ? -1 : 0;
+	}
+}
