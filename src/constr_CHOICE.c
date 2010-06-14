@@ -1014,11 +1014,9 @@ CHOICE_print(asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
 		}
 
 		/* Print member's name and stuff */
-		if(0) {
-			if(cb(elm->name, strlen(elm->name), app_key) < 0
-			|| cb(": ", 2, app_key) < 0)
-				return -1;
-		}
+		if(cb(elm->name, strlen(elm->name), app_key) < 0
+		|| cb(": ", 2, app_key) < 0)
+			return -1;
 
 		return elm->type->print_struct(elm->type, memb_ptr, ilevel,
 			cb, app_key);
