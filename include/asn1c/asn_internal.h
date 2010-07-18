@@ -27,7 +27,7 @@ int get_asn1c_environment_version(void);	/* Run-time version */
 
 extern void *talloc_asn1_ctx;
 
-#define	CALLOC(nmemb, size)	talloc_size(talloc_asn1_ctx, (nmemb) * (size))
+#define	CALLOC(nmemb, size)	talloc_zero_size(talloc_asn1_ctx, (nmemb) * (size))
 #define	MALLOC(size)		talloc_size(talloc_asn1_ctx, size)
 #define	REALLOC(oldptr, size)	talloc_realloc_size(talloc_asn1_ctx, oldptr, size)
 #define	FREEMEM(ptr)		talloc_free(ptr)

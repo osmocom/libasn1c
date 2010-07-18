@@ -21,7 +21,7 @@ index 67f055a..45b1adb 100644
 -#define	FREEMEM(ptr)		free(ptr)
 +extern void *talloc_asn1_ctx;
 +
-+#define	CALLOC(nmemb, size)	talloc_size(talloc_asn1_ctx, (nmemb) * (size))
++#define	CALLOC(nmemb, size)	talloc_zero_size(talloc_asn1_ctx, (nmemb) * (size))
 +#define	MALLOC(size)		talloc_size(talloc_asn1_ctx, size)
 +#define	REALLOC(oldptr, size)	talloc_realloc_size(talloc_asn1_ctx, oldptr, size)
 +#define	FREEMEM(ptr)		talloc_free(ptr)
