@@ -15,6 +15,8 @@
 #include <assert.h>		/* for assert() macro */
 #endif
 
+#include <osmocore/talloc.h>
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -23,10 +25,12 @@ extern "C" {
 #define	ASN1C_ENVIRONMENT_VERSION	922	/* Compile-time version */
 int get_asn1c_environment_version(void);	/* Run-time version */
 
-#define	CALLOC(nmemb, size)	calloc(nmemb, size)
-#define	MALLOC(size)		malloc(size)
-#define	REALLOC(oldptr, size)	realloc(oldptr, size)
-#define	FREEMEM(ptr)		free(ptr)
+extern void *talloc_asn1_ctx;
+
+#define	CALLOC(nmemb, size)	talloc_size(talloc_asn1_ctx, (nmemb) * (size))
+#define	MALLOC(size)		talloc_size(talloc_asn1_ctx, size)
+#define	REALLOC(oldptr, size)	talloc_realloc_size(talloc_asn1_ctx, oldptr, size)
+#define	FREEMEM(ptr)		talloc_free(ptr)
 
 /*
  * A macro for debugging the ASN.1 internals.

@@ -6,6 +6,8 @@
 #include <asn_codecs_prim.h>
 #include <errno.h>
 
+void *talloc_asn1_ctx;
+
 /*
  * Decode an always-primitive type.
  */
