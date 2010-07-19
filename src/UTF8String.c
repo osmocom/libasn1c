@@ -23,7 +23,8 @@ asn_TYPE_descriptor_t asn_DEF_UTF8String = {
 	OCTET_STRING_encode_der,
 	OCTET_STRING_decode_xer_utf8,
 	OCTET_STRING_encode_xer_utf8,
-	0, 0,
+	OCTET_STRING_decode_uper,
+	OCTET_STRING_encode_uper,
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_UTF8String_tags,
 	sizeof(asn_DEF_UTF8String_tags)
@@ -72,26 +73,26 @@ UTF8String_constraint(asn_TYPE_descriptor_t *td, const void *sptr,
 	ssize_t len = UTF8String_length((const UTF8String_t *)sptr);
 	switch(len) {
 	case U8E_EINVAL:
-		_ASN_CTFAIL(app_key, td,
+		_ASN_CTFAIL(app_key, td, sptr,
 			"%s: value not given", td->name);
 		break;
 	case U8E_TRUNC:
-		_ASN_CTFAIL(app_key, td,
+		_ASN_CTFAIL(app_key, td, sptr,
 			"%s: truncated UTF-8 sequence (%s:%d)",
 			td->name, __FILE__, __LINE__);
 		break;
 	case U8E_ILLSTART:
-		_ASN_CTFAIL(app_key, td,
+		_ASN_CTFAIL(app_key, td, sptr,
 			"%s: UTF-8 illegal start of encoding (%s:%d)",
 			td->name, __FILE__, __LINE__);
 		break;
 	case U8E_NOTCONT:
-		_ASN_CTFAIL(app_key, td,
+		_ASN_CTFAIL(app_key, td, sptr,
 			"%s: UTF-8 not continuation (%s:%d)",
 			td->name, __FILE__, __LINE__);
 		break;
 	case U8E_NOTMIN:
-		_ASN_CTFAIL(app_key, td,
+		_ASN_CTFAIL(app_key, td, sptr,
 			"%s: UTF-8 not minimal sequence (%s:%d)",
 			td->name, __FILE__, __LINE__);
 		break;

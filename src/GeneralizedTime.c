@@ -105,10 +105,13 @@ static long GMTOFF(struct tm a){
 	tzold = getenv("TZ");						\
 	if(tzold) {							\
 		size_t tzlen = strlen(tzold);				\
-		if(tzlen < sizeof(tzoldbuf))				\
+		if(tzlen < sizeof(tzoldbuf)) {				\
 			tzold = memcpy(tzoldbuf, tzold, tzlen + 1);	\
-		else							\
-			tzold = strdup(tzold);	/* Ignore error */	\
+		} else {						\
+			char *dupptr = tzold;				\
+			tzold = MALLOC(tzlen + 1);			\
+			if(tzold) memcpy(tzold, dupptr, tzlen + 1);	\
+		}							\
 		setenv("TZ", "UTC", 1);					\
 	}								\
 	tzset();							\
@@ -147,6 +150,11 @@ static ber_tlv_tag_t asn_DEF_GeneralizedTime_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (26 << 2)),  /* [UNIVERSAL 26] IMPLICIT ...*/
 	(ASN_TAG_CLASS_UNIVERSAL | (4 << 2))    /* ... OCTET STRING */
 };
+static asn_per_constraints_t asn_DEF_GeneralizedTime_constraints = {
+	{ APC_CONSTRAINED, 7, 7, 0x20, 0x7e },  /* Value */
+	{ APC_SEMI_CONSTRAINED, -1, -1, 0, 0 }, /* Size */
+	0, 0
+};
 asn_TYPE_descriptor_t asn_DEF_GeneralizedTime = {
 	"GeneralizedTime",
 	"GeneralizedTime",
@@ -157,7 +165,8 @@ asn_TYPE_descriptor_t asn_DEF_GeneralizedTime = {
 	GeneralizedTime_encode_der,
 	OCTET_STRING_decode_xer_utf8,
 	GeneralizedTime_encode_xer,
-	0, 0,
+	OCTET_STRING_decode_uper,
+	OCTET_STRING_encode_uper,
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_GeneralizedTime_tags,
 	sizeof(asn_DEF_GeneralizedTime_tags)
@@ -165,7 +174,7 @@ asn_TYPE_descriptor_t asn_DEF_GeneralizedTime = {
 	asn_DEF_GeneralizedTime_tags,
 	sizeof(asn_DEF_GeneralizedTime_tags)
 	  / sizeof(asn_DEF_GeneralizedTime_tags[0]),
-	0,	/* No PER visible constraints */
+	&asn_DEF_GeneralizedTime_constraints,
 	0, 0,	/* No members */
 	0	/* No specifics */
 };
@@ -184,7 +193,7 @@ GeneralizedTime_constraint(asn_TYPE_descriptor_t *td, const void *sptr,
 	errno = EPERM;			/* Just an unlikely error code */
 	tloc = asn_GT2time(st, 0, 0);
 	if(tloc == -1 && errno != EPERM) {
-		_ASN_CTFAIL(app_key, td,
+		_ASN_CTFAIL(app_key, td, sptr,
 			"%s: Invalid time format: %s (%s:%d)",
 			td->name, strerror(errno), __FILE__, __LINE__);
 		return -1;
@@ -657,7 +666,7 @@ asn_time2GT_frac(GeneralizedTime_t *opt_gt, const struct tm *tm, int frac_value,
 		int ret;
 		gmtoff %= 86400;
 		ret = snprintf(p, buf_size - size, "%+03ld%02ld",
-			gmtoff / 3600, labs(gmtoff % 3600));
+			gmtoff / 3600, labs(gmtoff % 3600) / 60);
 		if(ret != 5) {
 			FREEMEM(buf);
 			errno = EINVAL;

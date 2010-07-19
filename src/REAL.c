@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2004 Lev Walkin <vlm@lionet.info>. All rights reserved.
+ * Copyright (c) 2004, 2006 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #if	defined(__alpha)
@@ -12,12 +12,13 @@
 #include <math.h>
 #include <errno.h>
 #include <REAL.h>
+#include <OCTET_STRING.h>
 
 #undef	INT_MAX
 #define	INT_MAX	((int)(((unsigned int)-1) >> 1))
 
 #if	!(defined(NAN) || defined(INFINITY))
-static volatile double real_zero __attribute__ ((unused)) = 0.0;
+static volatile double real_zero GCC_NOTUSED = 0.0;
 #endif
 #ifndef	NAN
 #define	NAN	(real_zero/real_zero)
@@ -42,7 +43,8 @@ asn_TYPE_descriptor_t asn_DEF_REAL = {
 	der_encode_primitive,
 	REAL_decode_xer,
 	REAL_encode_xer,
-	0, 0,
+	REAL_decode_uper,
+	REAL_encode_uper,
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_REAL_tags,
 	sizeof(asn_DEF_REAL_tags) / sizeof(asn_DEF_REAL_tags[0]),
@@ -341,6 +343,20 @@ REAL_decode_xer(asn_codec_ctx_t *opt_codec_ctx,
 		buf_ptr, size, REAL__xer_body_decode);
 }
 
+asn_dec_rval_t
+REAL_decode_uper(asn_codec_ctx_t *opt_codec_ctx,
+	asn_TYPE_descriptor_t *td, asn_per_constraints_t *constraints,
+	void **sptr, asn_per_data_t *pd) {
+	(void)constraints;	/* No PER visible constraints */
+	return OCTET_STRING_decode_uper(opt_codec_ctx, td, 0, sptr, pd);
+}
+
+asn_enc_rval_t
+REAL_encode_uper(asn_TYPE_descriptor_t *td,
+	asn_per_constraints_t *constraints, void *sptr, asn_per_outp_t *po) {
+	(void)constraints;	/* No PER visible constraints */
+	return OCTET_STRING_encode_uper(td, 0, sptr, po);
+}
 
 int
 asn_REAL2double(const REAL_t *st, double *dbl_value) {
@@ -437,16 +453,16 @@ asn_REAL2double(const REAL_t *st, double *dbl_value) {
 		return -1;
 	}
 
-	if((octv & 0x03) == 0x11) {
-		/* 8.5.6.4, case d) */
+	elen = (octv & 0x03);	/* bits 2 to 1; 8.5.6.4 */
+	if(elen == 0x03) {	/* bits 2 to 1 = 11; 8.5.6.4, case d) */
 		elen = st->buf[1];	/* unsigned binary number */
 		if(elen == 0 || st->size <= (int)(2 + elen)) {
 			errno = EINVAL;
 			return -1;
 		}
+		/* FIXME: verify constraints of case d) */
 		ptr = &st->buf[2];
 	} else {
-		elen = (octv & 0x03);
 		ptr = &st->buf[1];
 	}
 
@@ -505,8 +521,8 @@ asn_double2REAL(REAL_t *st, double dbl_value) {
 	uint8_t buf[16];	/* More than enough for 8-byte dbl_value */
 	uint8_t dscr[sizeof(dbl_value)];	/* double value scratch pad */
 	/* Assertion guards: won't even compile, if unexpected double size */
-	char assertion_buffer1[9 - sizeof(dbl_value)] __attribute__((unused));
-	char assertion_buffer2[sizeof(dbl_value) - 7] __attribute__((unused));
+	char assertion_buffer1[9 - sizeof(dbl_value)] GCC_NOTUSED;
+	char assertion_buffer2[sizeof(dbl_value) - 7] GCC_NOTUSED;
 	uint8_t *ptr = buf;
 	uint8_t *mstop;		/* Last byte of mantissa */
 	unsigned int mval;	/* Value of the last byte of mantissa */
