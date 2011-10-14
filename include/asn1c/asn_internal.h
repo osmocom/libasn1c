@@ -15,7 +15,7 @@
 #include <assert.h>		/* for assert() macro */
 #endif
 
-#include <osmocore/talloc.h>
+#include <osmocom/core/talloc.h>
 
 #ifdef	__cplusplus
 extern "C" {
