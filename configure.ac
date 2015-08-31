@@ -1,4 +1,4 @@
-AC_INIT([libasn1c], [0.9.21],
+AC_INIT([libasn1c], [0.9.28],
         [openbsc-devel@lists.openbsc.org])
 
 AM_INIT_AUTOMAKE([dist-bzip2])

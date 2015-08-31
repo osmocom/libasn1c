@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 /* Environment version might be used to avoid running with the old library */
-#define	ASN1C_ENVIRONMENT_VERSION	922	/* Compile-time version */
+#define	ASN1C_ENVIRONMENT_VERSION	924	/* Compile-time version */
 int get_asn1c_environment_version(void);	/* Run-time version */
 
 extern void *talloc_asn1_ctx;
@@ -32,6 +32,9 @@ extern void *talloc_asn1_ctx;
 #define	REALLOC(oldptr, size)	talloc_realloc_size(talloc_asn1_ctx, oldptr, size)
 #define	FREEMEM(ptr)		talloc_free(ptr)
 
+#define	asn_debug_indent	0
+#define ASN_DEBUG_INDENT_ADD(i) do{}while(0)
+
 /*
  * A macro for debugging the ASN.1 internals.
  * You may enable or override it.
@@ -40,17 +43,25 @@ extern void *talloc_asn1_ctx;
 #if	EMIT_ASN_DEBUG == 1	/* And it was asked to emit this code... */
 #ifdef	__GNUC__
 #ifdef	ASN_THREAD_SAFE
-#define	asn_debug_indent	0
+/* Thread safety requires sacrifice in output indentation:
+ * Retain empty definition of ASN_DEBUG_INDENT_ADD. */
 #else	/* !ASN_THREAD_SAFE */
+#undef  ASN_DEBUG_INDENT_ADD
+#undef  asn_debug_indent
 int asn_debug_indent;
+#define ASN_DEBUG_INDENT_ADD(i) do { asn_debug_indent += i; } while(0)
 #endif	/* ASN_THREAD_SAFE */
-#define	ASN_DEBUG(fmt, args...)	do {			\
+extern int asn_debug; /* Allow option on execution */
+#define	ASN_DEBUG(fmt, args...) \
+if (asn_debug) {    \
+    do {			\
 		int adi = asn_debug_indent;		\
 		while(adi--) fprintf(stderr, " ");	\
 		fprintf(stderr, fmt, ##args);		\
 		fprintf(stderr, " (%s:%d)\n",		\
 			__FILE__, __LINE__);		\
-	} while(0)
+	} while(0);  \
+}
 #else	/* !__GNUC__ */
 void ASN_DEBUG_f(const char *fmt, ...);
 #define	ASN_DEBUG	ASN_DEBUG_f

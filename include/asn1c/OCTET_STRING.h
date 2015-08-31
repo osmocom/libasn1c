@@ -32,6 +32,8 @@ xer_type_encoder_f OCTET_STRING_encode_xer;
 xer_type_encoder_f OCTET_STRING_encode_xer_utf8;
 per_type_decoder_f OCTET_STRING_decode_uper;
 per_type_encoder_f OCTET_STRING_encode_uper;
+per_type_decoder_f OCTET_STRING_decode_aper;
+per_type_encoder_f OCTET_STRING_encode_aper;
 
 /******************************
  * Handy conversion routines. *
@@ -63,7 +65,7 @@ OCTET_STRING_t *OCTET_STRING_new_fromBuf(asn_TYPE_descriptor_t *td,
  * Internally useful stuff. *
  ****************************/
 
-typedef struct asn_OCTET_STRING_specifics_s {
+typedef const struct asn_OCTET_STRING_specifics_s {
 	/*
 	 * Target structure description.
 	 */

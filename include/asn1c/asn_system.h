@@ -21,7 +21,7 @@
 #include <stdarg.h>	/* For va_start */
 #include <stddef.h>	/* for offsetof and ptrdiff_t */
 
-#ifdef	WIN32
+#ifdef	_WIN32
 
 #include <malloc.h>
 #define	 snprintf	_snprintf
@@ -29,9 +29,9 @@
 
 /* To avoid linking with ws2_32.lib, here's the definition of ntohl() */
 #define sys_ntohl(l)	((((l) << 24)  & 0xff000000)	\
-			| (((l) << 16) & 0xff0000)	\
-			| (((l) << 8)  & 0xff00)	\
-			| ((l) & 0xff))
+			| (((l) << 8) & 0xff0000)	\
+			| (((l) >> 8)  & 0xff00)	\
+			| ((l >> 24) & 0xff))
 
 #ifdef _MSC_VER			/* MSVS.Net */
 #ifndef __cplusplus
@@ -57,7 +57,7 @@ typedef	unsigned int	uint32_t;
 #include <stdint.h>
 #endif	/* _MSC_VER */
 
-#else	/* !WIN32 */
+#else	/* !_WIN32 */
 
 #if defined(__vxworks)
 #include <types/vxTypes.h>
@@ -90,7 +90,7 @@ typedef	unsigned int	uint32_t;
 
 #endif	/* defined(__vxworks) */
 
-#endif	/* WIN32 */
+#endif	/* _WIN32 */
 
 #if	__GNUC__ >= 3
 #ifndef	GCC_PRINTFLIKE

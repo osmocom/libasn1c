@@ -9,7 +9,7 @@
 /*
  * BMPString basic type description.
  */
-static ber_tlv_tag_t asn_DEF_BMPString_tags[] = {
+static const ber_tlv_tag_t asn_DEF_BMPString_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (30 << 2)),	/* [UNIVERSAL 30] IMPLICIT ...*/
 	(ASN_TAG_CLASS_UNIVERSAL | (4 << 2))	/* ... OCTET STRING */
 };
@@ -35,6 +35,8 @@ asn_TYPE_descriptor_t asn_DEF_BMPString = {
 	BMPString_encode_xer,		/* Convert to UTF-8 */
 	OCTET_STRING_decode_uper,
 	OCTET_STRING_encode_uper,
+	OCTET_STRING_decode_aper,	/* Aligned PER decoder */
+	OCTET_STRING_encode_aper,	/* Aligned PER encoder */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_BMPString_tags,
 	sizeof(asn_DEF_BMPString_tags)
@@ -143,7 +145,7 @@ BMPString_decode_xer(asn_codec_ctx_t *opt_codec_ctx,
 				return rc;
 			} else {
 				dstwc[wcs_len] = 0;	/* nul-terminate */
-				wcs = (uint32_t *)dstwc;
+				wcs = (uint32_t *)(void *)dstwc; /* Alignment OK */
 			}
 		}
 

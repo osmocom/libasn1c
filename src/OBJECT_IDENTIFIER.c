@@ -3,6 +3,7 @@
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #include <asn_internal.h>
+#include <INTEGER.h>
 #include <OBJECT_IDENTIFIER.h>
 #include <OCTET_STRING.h>
 #include <limits.h>	/* for CHAR_BIT */
@@ -11,7 +12,7 @@
 /*
  * OBJECT IDENTIFIER basic type description.
  */
-static ber_tlv_tag_t asn_DEF_OBJECT_IDENTIFIER_tags[] = {
+static const ber_tlv_tag_t asn_DEF_OBJECT_IDENTIFIER_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (6 << 2))
 };
 asn_TYPE_descriptor_t asn_DEF_OBJECT_IDENTIFIER = {
@@ -26,6 +27,8 @@ asn_TYPE_descriptor_t asn_DEF_OBJECT_IDENTIFIER = {
 	OBJECT_IDENTIFIER_encode_xer,
 	OCTET_STRING_decode_uper,
 	OCTET_STRING_encode_uper,
+	OCTET_STRING_decode_aper,
+	OCTET_STRING_encode_aper,
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_OBJECT_IDENTIFIER_tags,
 	sizeof(asn_DEF_OBJECT_IDENTIFIER_tags)
@@ -64,9 +67,9 @@ OBJECT_IDENTIFIER_constraint(asn_TYPE_descriptor_t *td, const void *sptr,
 
 
 int
-OBJECT_IDENTIFIER_get_single_arc(uint8_t *arcbuf, unsigned int arclen, signed int add, void *rvbufp, unsigned int rvsize) {
+OBJECT_IDENTIFIER_get_single_arc(const uint8_t *arcbuf, unsigned int arclen, signed int add, void *rvbufp, unsigned int rvsize) {
 	unsigned LE GCC_NOTUSED = 1; /* Little endian (x86) */
-	uint8_t *arcend = arcbuf + arclen;	/* End of arc */
+	const uint8_t *arcend = arcbuf + arclen;	/* End of arc */
 	unsigned int cache = 0;	/* No more than 14 significant bits */
 	unsigned char *rvbuf = (unsigned char *)rvbufp;
 	unsigned char *rvstart = rvbuf;	/* Original start of the value buffer */
@@ -119,7 +122,7 @@ OBJECT_IDENTIFIER_get_single_arc(uint8_t *arcbuf, unsigned int arclen, signed in
 			errno = ERANGE;	/* Overflow */
 			return -1;
 		}
-		*(unsigned long *)rvbuf = accum + add;	/* alignment OK! */
+		*(unsigned long *)(void *)rvbuf = accum + add;	/* alignment OK! */
 		return 0;
 	}
 
@@ -180,7 +183,7 @@ OBJECT_IDENTIFIER_get_single_arc(uint8_t *arcbuf, unsigned int arclen, signed in
 }
 
 ssize_t
-OBJECT_IDENTIFIER__dump_arc(uint8_t *arcbuf, int arclen, int add,
+OBJECT_IDENTIFIER__dump_arc(const uint8_t *arcbuf, int arclen, int add,
 		asn_app_consume_bytes_f *cb, void *app_key) {
 	char scratch[64];	/* Conservative estimate */
 	unsigned long accum;	/* Bits accumulator */
@@ -211,7 +214,7 @@ OBJECT_IDENTIFIER__dump_arc(uint8_t *arcbuf, int arclen, int add,
 }
 
 int
-OBJECT_IDENTIFIER_print_arc(uint8_t *arcbuf, int arclen, int add,
+OBJECT_IDENTIFIER_print_arc(const uint8_t *arcbuf, int arclen, int add,
 		asn_app_consume_bytes_f *cb, void *app_key) {
 
 	if(OBJECT_IDENTIFIER__dump_arc(arcbuf, arclen, add, cb, app_key) < 0)
@@ -281,15 +284,13 @@ OBJECT_IDENTIFIER__xer_body_decode(asn_TYPE_descriptor_t *td, void *sptr, const 
 	arcs_count = OBJECT_IDENTIFIER_parse_arcs(
 		(const char *)chunk_buf, chunk_size, arcs,
 			sizeof(s_arcs)/sizeof(s_arcs[0]), &endptr);
-	if(arcs_count <= 0) {
+	if(arcs_count < 0) {
 		/* Expecting more than zero arcs */
 		return XPBD_BROKEN_ENCODING;
+	} else if(arcs_count == 0) {
+		return XPBD_NOT_BODY_IGNORE;
 	}
-	if(endptr < chunk_end) {
-		/* We have a tail of unrecognized data. Check its safety. */
-		if(!xer_is_whitespace(endptr, chunk_end - endptr))
-			return XPBD_BROKEN_ENCODING;
-	}
+	assert(endptr == chunk_end);
 
 	if((size_t)arcs_count > sizeof(s_arcs)/sizeof(s_arcs[0])) {
 		arcs = (long *)MALLOC(arcs_count * sizeof(long));
@@ -361,7 +362,7 @@ OBJECT_IDENTIFIER_print(asn_TYPE_descriptor_t *td, const void *sptr,
 }
 
 int
-OBJECT_IDENTIFIER_get_arcs(OBJECT_IDENTIFIER_t *oid, void *arcs,
+OBJECT_IDENTIFIER_get_arcs(const OBJECT_IDENTIFIER_t *oid, void *arcs,
 		unsigned int arc_type_size, unsigned int arc_slots) {
 	void *arcs_end = (char *)arcs + (arc_type_size * arc_slots);
 	int num_arcs = 0;
@@ -649,12 +650,12 @@ OBJECT_IDENTIFIER_parse_arcs(const char *oid_text, ssize_t oid_txt_length,
 	long *arcs, unsigned int arcs_slots, const char **opt_oid_text_end) {
 	unsigned int arcs_count = 0;
 	const char *oid_end;
-	long value = 0;
 	enum {
-		ST_SKIPSPACE,
+		ST_LEADSPACE,
+		ST_TAILSPACE,
+		ST_AFTERVALUE,	/* Next character ought to be '.' or a space */
 		ST_WAITDIGITS,	/* Next character is expected to be a digit */
-		ST_DIGITS
-	} state = ST_SKIPSPACE;
+	} state = ST_LEADSPACE;
 
 	if(!oid_text || oid_txt_length < -1 || (arcs_slots && !arcs)) {
 		if(opt_oid_text_end) *opt_oid_text_end = oid_text;
@@ -665,41 +666,76 @@ OBJECT_IDENTIFIER_parse_arcs(const char *oid_text, ssize_t oid_txt_length,
 	if(oid_txt_length == -1)
 		oid_txt_length = strlen(oid_text);
 
+#define	_OID_CAPTURE_ARC(oid_text, oid_end)		do {	\
+	const char *endp = oid_end;				\
+	long value;						\
+	switch(asn_strtol_lim(oid_text, &endp, &value)) {	\
+	case ASN_STRTOL_EXTRA_DATA:				\
+	case ASN_STRTOL_OK:					\
+		if(arcs_count < arcs_slots)			\
+			arcs[arcs_count] = value;		\
+		arcs_count++;					\
+		oid_text = endp - 1;				\
+		break;						\
+	case ASN_STRTOL_ERROR_RANGE:				\
+		if(opt_oid_text_end)				\
+			*opt_oid_text_end = oid_text;		\
+		errno = ERANGE;					\
+		return -1;					\
+	case ASN_STRTOL_ERROR_INVAL:				\
+	case ASN_STRTOL_EXPECT_MORE:				\
+		if(opt_oid_text_end)				\
+			*opt_oid_text_end = oid_text;		\
+		errno = EINVAL;					\
+		return -1;					\
+	}							\
+  } while(0)
+
 	for(oid_end = oid_text + oid_txt_length; oid_text<oid_end; oid_text++) {
 	    switch(*oid_text) {
 	    case 0x09: case 0x0a: case 0x0d: case 0x20:	/* whitespace */
-		if(state == ST_SKIPSPACE) {
+		switch(state) {
+		case ST_LEADSPACE:
+		case ST_TAILSPACE:
 			continue;
-		} else {
-			break;	/* Finish */
+		case ST_AFTERVALUE:
+			state = ST_TAILSPACE;
+			continue;
+		case ST_WAITDIGITS:
+			break;	/* Digits expected after ".", got whitespace */
 		}
+		break;
 	    case 0x2e:	/* '.' */
-		if(state != ST_DIGITS
-		|| (oid_text + 1) == oid_end) {
-			state = ST_WAITDIGITS;
+		switch(state) {
+		case ST_LEADSPACE:
+		case ST_TAILSPACE:
+		case ST_WAITDIGITS:
+			if(opt_oid_text_end)
+				*opt_oid_text_end = oid_text;
+			errno = EINVAL;	/* Broken OID */
+			return -1;
 			break;
+		case ST_AFTERVALUE:
+			state = ST_WAITDIGITS;
+			continue;
 		}
-		if(arcs_count < arcs_slots)
-			arcs[arcs_count] = value;
-		arcs_count++;
-		state = ST_WAITDIGITS;
-		continue;
+		break;
 	    case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
 	    case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
-		if(state != ST_DIGITS) {
-			state = ST_DIGITS;
-			value = 0;
-		}
-		if(1) {
-			long new_value = value * 10;
-			if(new_value / 10 != value
-			|| (value = new_value + (*oid_text - 0x30)) < 0) {
-				/* Overflow */
-				state = ST_WAITDIGITS;
-				break;
-			}
+		switch(state) {
+		case ST_TAILSPACE:
+		case ST_AFTERVALUE:
+			if(opt_oid_text_end)
+				*opt_oid_text_end = oid_text;
+			errno = EINVAL;	/* "1. 1" => broken OID */
+			return -1;
+		case ST_LEADSPACE:
+		case ST_WAITDIGITS:
+			_OID_CAPTURE_ARC(oid_text, oid_end);
+			state = ST_AFTERVALUE;
 			continue;
 		}
+		break;
 	    default:
 		/* Unexpected symbols */
 		state = ST_WAITDIGITS;
@@ -713,17 +749,18 @@ OBJECT_IDENTIFIER_parse_arcs(const char *oid_text, ssize_t oid_txt_length,
 
 	/* Finalize last arc */
 	switch(state) {
+	case ST_LEADSPACE:
+		return 0; /* No OID found in input data */
 	case ST_WAITDIGITS:
-		errno = EINVAL;
+		errno = EINVAL;	/* Broken OID */
 		return -1;
-	case ST_DIGITS:
-		if(arcs_count < arcs_slots)
-			arcs[arcs_count] = value;
-		arcs_count++;
-		/* Fall through */
-	default:
+	case ST_AFTERVALUE:
+	case ST_TAILSPACE:
 		return arcs_count;
 	}
+
+	errno = EINVAL;	/* Broken OID */
+	return -1;
 }
 
 

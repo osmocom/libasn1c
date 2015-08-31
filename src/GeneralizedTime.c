@@ -14,7 +14,7 @@
 #include <time.h>
 #endif	/* __CYGWIN__ */
 
-#if	defined(WIN32)
+#if	defined(_WIN32)
 #pragma message( "PLEASE STOP AND READ!")
 #pragma message( "  localtime_r is implemented via localtime(), which may be not thread-safe.")
 #pragma message( "  gmtime_r is implemented via gmtime(), which may be not thread-safe.")
@@ -41,7 +41,7 @@ static struct tm *gmtime_r(const time_t *tloc, struct tm *result) {
 #define	putenv(c)	_putenv(c)
 #define	_EMULATE_TIMEGM
 
-#endif	/* WIN32 */
+#endif	/* _WIN32 */
 
 #if	defined(sun) || defined(_sun_) || defined(__solaris__)
 #define	_EMULATE_TIMEGM
@@ -67,6 +67,14 @@ static struct tm *gmtime_r(const time_t *tloc, struct tm *result) {
 #define	GMTOFF(tm)	(-timezone)
 #endif	/* HAVE_TM_GMTOFF */
 
+#if	defined(_WIN32)
+#pragma message( "PLEASE STOP AND READ!")
+#pragma message( "  timegm() is implemented via getenv(\"TZ\")/setenv(\"TZ\"), which may be not thread-safe.")
+#pragma message( "  ")
+#pragma message( "  You must fix the code by inserting appropriate locking")
+#pragma message( "  if you want to use asn_GT2time() or asn_UT2time().")
+#pragma message( "PLEASE STOP AND READ!")
+#else
 #if	(defined(_EMULATE_TIMEGM) || !defined(HAVE_TM_GMTOFF))
 #warning "PLEASE STOP AND READ!"
 #warning "  timegm() is implemented via getenv(\"TZ\")/setenv(\"TZ\"), which may be not thread-safe."
@@ -75,6 +83,7 @@ static struct tm *gmtime_r(const time_t *tloc, struct tm *result) {
 #warning "  if you want to use asn_GT2time() or asn_UT2time()."
 #warning "PLEASE STOP AND READ!"
 #endif	/* _EMULATE_TIMEGM */
+#endif
 
 /*
  * Override our GMTOFF decision for other known platforms.
@@ -128,6 +137,7 @@ static long GMTOFF(struct tm a){
 	tzset();							\
 } while(0); } while(0);
 
+#ifndef HAVE_TIMEGM
 #ifdef	_EMULATE_TIMEGM
 static time_t timegm(struct tm *tm) {
 	time_t tloc;
@@ -138,6 +148,7 @@ static time_t timegm(struct tm *tm) {
 	return tloc;
 }
 #endif	/* _EMULATE_TIMEGM */
+#endif
 
 
 #ifndef	__ASN_INTERNAL_TEST_MODE__
@@ -145,7 +156,7 @@ static time_t timegm(struct tm *tm) {
 /*
  * GeneralizedTime basic type description.
  */
-static ber_tlv_tag_t asn_DEF_GeneralizedTime_tags[] = {
+static const ber_tlv_tag_t asn_DEF_GeneralizedTime_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (24 << 2)),	/* [UNIVERSAL 24] IMPLICIT ...*/
 	(ASN_TAG_CLASS_UNIVERSAL | (26 << 2)),  /* [UNIVERSAL 26] IMPLICIT ...*/
 	(ASN_TAG_CLASS_UNIVERSAL | (4 << 2))    /* ... OCTET STRING */
@@ -167,6 +178,8 @@ asn_TYPE_descriptor_t asn_DEF_GeneralizedTime = {
 	GeneralizedTime_encode_xer,
 	OCTET_STRING_decode_uper,
 	OCTET_STRING_encode_uper,
+	OCTET_STRING_decode_aper,
+	OCTET_STRING_encode_aper,
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_GeneralizedTime_tags,
 	sizeof(asn_DEF_GeneralizedTime_tags)
@@ -314,13 +327,14 @@ asn_GT2time_prec(const GeneralizedTime_t *st, int *frac_value, int frac_digits, 
 		while(fd > frac_digits)
 			fv /= 10, fd--;
 		while(fd < frac_digits) {
-			int new_fv = fv * 10;
-			if(new_fv / 10 != fv) {
+			if(fv < INT_MAX / 10) {
+				fv *= 10;
+				fd++;
+			} else {
 				/* Too long precision request */
 				fv = 0;
 				break;
 			}
-			fv = new_fv, fd++;
 		}
 
 		*frac_value = fv;
@@ -441,16 +455,15 @@ asn_GT2time_frac(const GeneralizedTime_t *st, int *frac_value, int *frac_digits,
 		 */
 		for(buf++; buf < end; buf++) {
 			int v = *buf;
-			int new_fvalue;
+			/* GCC 4.x is being too smart without volatile */
 			switch(v) {
 			case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
 			case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
-				new_fvalue = fvalue * 10 + (v - 0x30);
-				if(new_fvalue / 10 != fvalue) {
-					/* Not enough precision, ignore */
-				} else {
-					fvalue = new_fvalue;
+				if(fvalue < INT_MAX/10) {
+					fvalue = fvalue * 10 + (v - 0x30);
 					fdigits++;
+				} else {
+					/* Not enough precision, ignore */
 				}
 				continue;
 			default:

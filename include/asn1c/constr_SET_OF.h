@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-typedef struct asn_SET_OF_specifics_s {
+typedef const struct asn_SET_OF_specifics_s {
 	/*
 	 * Target structure description.
 	 */
@@ -34,6 +34,8 @@ xer_type_decoder_f SET_OF_decode_xer;
 xer_type_encoder_f SET_OF_encode_xer;
 per_type_decoder_f SET_OF_decode_uper;
 per_type_encoder_f SET_OF_encode_uper;
+per_type_decoder_f SET_OF_decode_aper;
+per_type_encoder_f SET_OF_encode_aper;
 
 #ifdef __cplusplus
 }

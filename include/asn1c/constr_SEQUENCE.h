@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-typedef struct asn_SEQUENCE_specifics_s {
+typedef const struct asn_SEQUENCE_specifics_s {
 	/*
 	 * Target structure description.
 	 */
@@ -21,14 +21,14 @@ typedef struct asn_SEQUENCE_specifics_s {
 	/*
 	 * Tags to members mapping table (sorted).
 	 */
-	asn_TYPE_tag2member_t *tag2el;
+	const asn_TYPE_tag2member_t *tag2el;
 	int tag2el_count;
 
 	/*
 	 * Optional members of the extensions root (roms) or additions (aoms).
 	 * Meaningful for PER.
 	 */
-	int *oms;		/* Optional MemberS */
+	const int *oms;		/* Optional MemberS */
 	int  roms_count;	/* Root optional members count */
 	int  aoms_count;	/* Additions optional members count */
 
@@ -52,6 +52,8 @@ xer_type_decoder_f SEQUENCE_decode_xer;
 xer_type_encoder_f SEQUENCE_encode_xer;
 per_type_decoder_f SEQUENCE_decode_uper;
 per_type_encoder_f SEQUENCE_encode_uper;
+per_type_decoder_f SEQUENCE_decode_aper;
+per_type_encoder_f SEQUENCE_encode_aper;
 
 #ifdef __cplusplus
 }

@@ -10,7 +10,7 @@
 /*
  * NULL basic type description.
  */
-static ber_tlv_tag_t asn_DEF_NULL_tags[] = {
+static const ber_tlv_tag_t asn_DEF_NULL_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (5 << 2))
 };
 asn_TYPE_descriptor_t asn_DEF_NULL = {
@@ -25,6 +25,8 @@ asn_TYPE_descriptor_t asn_DEF_NULL = {
 	NULL_encode_xer,
 	NULL_decode_uper,	/* Unaligned PER decoder */
 	NULL_encode_uper,	/* Unaligned PER encoder */
+	NULL_decode_aper,	/* Aligned PER decoder */
+	NULL_encode_aper,	/* Aligned PER encoder */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_NULL_tags,
 	sizeof(asn_DEF_NULL_tags) / sizeof(asn_DEF_NULL_tags[0]),
@@ -73,11 +75,15 @@ static enum xer_pbd_rval
 NULL__xer_body_decode(asn_TYPE_descriptor_t *td, void *sptr, const void *chunk_buf, size_t chunk_size) {
 	(void)td;
 	(void)sptr;
+	(void)chunk_buf;    /* Going to be empty according to the rules below. */
 
-	if(xer_is_whitespace(chunk_buf, chunk_size))
-		return XPBD_BODY_CONSUMED;
-	else
+	/*
+	 * There must be no content in self-terminating <NULL/> tag.
+	 */
+	if(chunk_size)
 		return XPBD_BROKEN_ENCODING;
+	else
+		return XPBD_BODY_CONSUMED;
 }
 
 asn_dec_rval_t
@@ -132,6 +138,34 @@ NULL_decode_uper(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 	return rv;
 }
 
+asn_dec_rval_t
+NULL_decode_aper(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
+	asn_per_constraints_t *constraints, void **sptr, asn_per_data_t *pd) {
+	asn_dec_rval_t rv;
+
+	(void)opt_codec_ctx;
+	(void)td;
+	(void)constraints;
+	(void)pd;
+
+	if(!*sptr) {
+		*sptr = MALLOC(sizeof(NULL_t));
+		if(*sptr) {
+			*(NULL_t *)*sptr = 0;
+		} else {
+			_ASN_DECODE_FAILED;
+		}
+	}
+
+	/*
+	 * NULL type does not have content octets.
+	 */
+
+	rv.code = RC_OK;
+	rv.consumed = 0;
+	return rv;
+}
+
 asn_enc_rval_t
 NULL_encode_uper(asn_TYPE_descriptor_t *td, asn_per_constraints_t *constraints,
 		void *sptr, asn_per_outp_t *po) {
@@ -144,4 +178,18 @@ NULL_encode_uper(asn_TYPE_descriptor_t *td, asn_per_constraints_t *constraints,
 
 	er.encoded = 0;
 	_ASN_ENCODED_OK(er);
+}
+
+asn_enc_rval_t
+NULL_encode_aper(asn_TYPE_descriptor_t *td, asn_per_constraints_t *constraints,
+                void *sptr, asn_per_outp_t *po) {
+        asn_enc_rval_t er;
+
+        (void)td;
+        (void)constraints;
+        (void)sptr;
+        (void)po;
+
+        er.encoded = 0;
+        _ASN_ENCODED_OK(er);
 }

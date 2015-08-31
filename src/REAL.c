@@ -1,10 +1,10 @@
 /*-
- * Copyright (c) 2004, 2006 Lev Walkin <vlm@lionet.info>. All rights reserved.
+ * Copyright (c) 2004-2013 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
-#if	defined(__alpha)
-#define	_ISOC99_SOURCE		/* For quiet NAN, through bits/nan.h */
+#define	_ISOC99_SOURCE		/* For ilogb() and quiet NAN */
 #define	_BSD_SOURCE		/* To reintroduce finite(3) */
+#if	defined(__alpha)
 #include <sys/resource.h>	/* For INFINITY */
 #endif
 #include <asn_internal.h>
@@ -27,10 +27,16 @@ static volatile double real_zero GCC_NOTUSED = 0.0;
 #define	INFINITY	(1.0/real_zero)
 #endif
 
+#ifdef isfinite
+#define _asn_isfinite(d)   isfinite(d)  /* ISO C99 */
+#else
+#define _asn_isfinite(d)   finite(d)    /* Deprecated on Mac OS X 10.9 */
+#endif
+
 /*
  * REAL basic type description.
  */
-static ber_tlv_tag_t asn_DEF_REAL_tags[] = {
+static const ber_tlv_tag_t asn_DEF_REAL_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (9 << 2))
 };
 asn_TYPE_descriptor_t asn_DEF_REAL = {
@@ -45,6 +51,8 @@ asn_TYPE_descriptor_t asn_DEF_REAL = {
 	REAL_encode_xer,
 	REAL_decode_uper,
 	REAL_encode_uper,
+	REAL_decode_aper,
+	REAL_encode_aper,
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_REAL_tags,
 	sizeof(asn_DEF_REAL_tags) / sizeof(asn_DEF_REAL_tags[0]),
@@ -88,7 +96,7 @@ REAL__dump(double d, int canonical, asn_app_consume_bytes_f *cb, void *app_key) 
 		buf = specialRealValue[SRV__NOT_A_NUMBER].string;
 		buflen = specialRealValue[SRV__NOT_A_NUMBER].length;
 		return (cb(buf, buflen, app_key) < 0) ? -1 : buflen;
-	} else if(!finite(d)) {
+	} else if(!_asn_isfinite(d)) {
 		if(copysign(1.0, d) < 0.0) {
 			buf = specialRealValue[SRV__MINUS_INFINITY].string;
 			buflen = specialRealValue[SRV__MINUS_INFINITY].length;
@@ -137,6 +145,7 @@ REAL__dump(double d, int canonical, asn_app_consume_bytes_f *cb, void *app_key) 
 
 		dot = (buf[0] == 0x2d /* '-' */) ? (buf + 2) : (buf + 1);
 		if(*dot >= 0x30) {
+			if(buf != local_buf) FREEMEM(buf);
 			errno = EINVAL;
 			return -1;	/* Not a dot, really */
 		}
@@ -157,6 +166,7 @@ REAL__dump(double d, int canonical, asn_app_consume_bytes_f *cb, void *app_key) 
 				}
 				expptr++;
 				if(expptr > end) {
+					if(buf != local_buf) FREEMEM(buf);
 					errno = EINVAL;
 					return -1;
 				}
@@ -182,6 +192,7 @@ REAL__dump(double d, int canonical, asn_app_consume_bytes_f *cb, void *app_key) 
 			}
 		}
 		if(E == end) {
+			if(buf != local_buf) FREEMEM(buf);
 			errno = EINVAL;
 			return -1;		/* No promised E */
 		}
@@ -358,6 +369,21 @@ REAL_encode_uper(asn_TYPE_descriptor_t *td,
 	return OCTET_STRING_encode_uper(td, 0, sptr, po);
 }
 
+asn_dec_rval_t
+REAL_decode_aper(asn_codec_ctx_t *opt_codec_ctx,
+	asn_TYPE_descriptor_t *td, asn_per_constraints_t *constraints,
+	void **sptr, asn_per_data_t *pd) {
+	(void)constraints;	/* No PER visible constraints */
+	return OCTET_STRING_decode_aper(opt_codec_ctx, td, 0, sptr, pd);
+}
+
+asn_enc_rval_t
+REAL_encode_aper(asn_TYPE_descriptor_t *td,
+	asn_per_constraints_t *constraints, void *sptr, asn_per_outp_t *po) {
+	(void)constraints;	/* No PER visible constraints */
+	return OCTET_STRING_encode_aper(td, 0, sptr, po);
+}
+
 int
 asn_REAL2double(const REAL_t *st, double *dbl_value) {
 	unsigned int octv;
@@ -375,10 +401,11 @@ asn_REAL2double(const REAL_t *st, double *dbl_value) {
 	octv = st->buf[0];	/* unsigned byte */
 
 	switch(octv & 0xC0) {
-	case 0x40:	/* X.690: 8.5.8 */
+	case 0x40:	/* X.690: 8.5.6 a) => 8.5.9 */
 		/* "SpecialRealValue" */
 
 		/* Be liberal in what you accept...
+		 * http://en.wikipedia.org/wiki/Robustness_principle
 		if(st->size != 1) ...
 		*/
 
@@ -389,10 +416,6 @@ asn_REAL2double(const REAL_t *st, double *dbl_value) {
 		case 0x41:	/* 01000001: MINUS-INFINITY */
 			*dbl_value = - INFINITY;
 			return 0;
-			/*
-			 * The following cases are defined by
-			 * X.690 Amendment 1 (10/03)
-			 */
 		case 0x42:	/* 01000010: NOT-A-NUMBER */
 			*dbl_value = NAN;
 			return 0;
@@ -403,21 +426,67 @@ asn_REAL2double(const REAL_t *st, double *dbl_value) {
 
 		errno = EINVAL;
 		return -1;
-	case 0x00: {	/* X.690: 8.5.6 */
+	case 0x00: {	/* X.690: 8.5.7 */
 		/*
-		 * Decimal. NR{1,2,3} format.
+		 * Decimal. NR{1,2,3} format from ISO 6093.
+		 * NR1: [ ]*[+-]?[0-9]+
+		 * NR2: [ ]*[+-]?([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)
+		 * NR3: [ ]*[+-]?([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)[Ee][+-]?[0-9]+
 		 */
 		double d;
+		char *buf;
+		char *endptr;
+		int used_malloc = 0;
 
-		assert(st->buf[st->size - 1] == 0); /* Security, vashu mat' */
+		if(octv == 0 || (octv & 0x3C)) {
+			/* Remaining values of bits 6 to 1 are Reserved. */
+			errno = EINVAL;
+			return -1;
+		}
 
-		d = strtod((char *)st->buf, 0);
-		if(finite(d)) {
+
+		/* 1. By contract, an input buffer should be null-terminated.
+		 * OCTET STRING decoder ensures that, as is asn_double2REAL().
+		 * 2. ISO 6093 specifies COMMA as a possible decimal separator.
+		 * However, strtod() can't always deal with COMMA.
+		 * So her we fix both by reallocating, copying and fixing.
+		 */
+		if(st->buf[st->size] || memchr(st->buf, ',', st->size)) {
+			uint8_t *p, *end;
+			char *b;
+			if(st->size > 100) {
+				/* Avoid malicious stack overflow in alloca() */
+				buf = (char *)MALLOC(st->size);
+				if(!buf) return -1;
+				used_malloc = 1;
+			} else {
+				buf = alloca(st->size);
+			}
+			b = buf;
+			/* Copy without the first byte and with 0-termination */
+			for(p = st->buf + 1, end = st->buf + st->size;
+					p < end; b++, p++)
+				*b = (*p == ',') ? '.' : *p;
+			*b = '\0';
+		} else {
+			buf = (char *)&st->buf[1];
+		}
+
+		endptr = buf;
+		d = strtod(buf, &endptr);
+		if(*endptr != '\0') {
+			/* Format is not consistent with ISO 6093 */
+			if(used_malloc) FREEMEM(buf);
+			errno = EINVAL;
+			return -1;
+		}
+		if(used_malloc) FREEMEM(buf);
+		if(_asn_isfinite(d)) {
 			*dbl_value = d;
 			return 0;
 		} else {
 			errno = ERANGE;
-			return 0;
+			return -1;
 		}
 	  }
 	}
@@ -476,13 +545,11 @@ asn_REAL2double(const REAL_t *st, double *dbl_value) {
 
 	/* Okay, the exponent is here. Now, what about mantissa? */
 	end = st->buf + st->size;
-	if(ptr < end) {
-		for(; ptr < end; ptr++)
-			m = ldexp(m, 8) + *ptr;
-	}
+	for(; ptr < end; ptr++)
+		m = ldexp(m, 8) + *ptr;
 
 	if(0)
-	ASN_DEBUG("m=%.10f, scF=%d, bF=%d, expval=%d, ldexp()=%f, ldexp()=%f",
+	ASN_DEBUG("m=%.10f, scF=%d, bF=%d, expval=%d, ldexp()=%f, ldexp()=%f\n",
 		m, scaleF, baseF, expval,
 		ldexp(m, expval * baseF + scaleF),
 		ldexp(m, scaleF) * pow(pow(2, baseF), expval)
@@ -494,7 +561,7 @@ asn_REAL2double(const REAL_t *st, double *dbl_value) {
 	m = ldexp(m, scaleF) * pow(pow(2, base), expval);
 	 */
 	m = ldexp(m, expval * baseF + scaleF);
-	if(finite(m)) {
+	if(_asn_isfinite(m)) {
 		*dbl_value = sign ? -m : m;
 	} else {
 		errno = ERANGE;
@@ -555,7 +622,7 @@ asn_double2REAL(REAL_t *st, double dbl_value) {
 			st->buf[0] = 0x42;	/* NaN */
 			st->buf[1] = 0;
 			st->size = 1;
-		} else if(!finite(dbl_value)) {
+		} else if(!_asn_isfinite(dbl_value)) {
 			if(copysign(1.0, dbl_value) < 0.0) {
 				st->buf[0] = 0x41;	/* MINUS-INFINITY */
 			} else {
@@ -564,14 +631,14 @@ asn_double2REAL(REAL_t *st, double dbl_value) {
 			st->buf[1] = 0;
 			st->size = 1;
 		} else {
-			if(copysign(1.0, dbl_value) < 0.0) {
-				st->buf[0] = 0x80 | 0x40;
-				st->buf[1] = 0;
-				st->size = 2;
-			} else {
+			if(copysign(1.0, dbl_value) >= 0.0) {
 				/* no content octets: positive zero */
 				st->buf[0] = 0;	/* JIC */
 				st->size = 0;
+			} else {
+				/* Negative zero. #8.5.3, 8.5.9 */
+				st->buf[0] = 0x43;
+				st->size = 1;
 			}
 		}
 		return 0;
@@ -630,7 +697,7 @@ asn_double2REAL(REAL_t *st, double dbl_value) {
 			accum = mval << ishift;
 		}
 
-		/* Adjust mantissa appropriately. */
+		/* Adjust exponent appropriately. */
 		expval += shift_count;
 	}
 
