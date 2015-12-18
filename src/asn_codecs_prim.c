@@ -6,6 +6,10 @@
 #include <asn_codecs_prim.h>
 #include <errno.h>
 
+#if	EMIT_ASN_DEBUG == 1
+int asn_debug = 0;
+#endif
+
 /*
  * Decode an always-primitive type.
  */

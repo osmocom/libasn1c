@@ -5,6 +5,9 @@ LIBVERSION=1:0:0
 
 AM_CPPFLAGS = $(all_includes) -I$(top_srcdir)/include/asn1c
 AM_CFLAGS = -fPIC -Wall $(LIBOSMOCORE_CFLAGS)
+if BUILD_DEBUG
+AM_CFLAGS += -DEMIT_ASN_DEBUG=1
+endif
 
 lib_LTLIBRARIES = libasn1c.la
 

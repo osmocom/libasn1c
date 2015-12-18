@@ -21,6 +21,8 @@
 #include <stdarg.h>	/* For va_start */
 #include <stddef.h>	/* for offsetof and ptrdiff_t */
 
+extern int asn_debug;
+
 #ifdef	_WIN32
 
 #include <malloc.h>

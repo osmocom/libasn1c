@@ -28,6 +28,10 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([char foo;])],
 CFLAGS="$saved_CFLAGS"
 AC_SUBST(SYMBOL_VISIBILITY)
 
+AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [Buld the library with EMIT_ASN_DEBUG enabled])],
+		[build_debug="$enableval"], [build_debug="no"])
+AM_CONDITIONAL(BUILD_DEBUG, test "x$build_debug" = "xyes")
+
 AC_OUTPUT(
         libasn1c.pc
         src/Makefile
