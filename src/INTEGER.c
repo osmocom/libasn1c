@@ -972,28 +972,29 @@ INTEGER_encode_aper(asn_TYPE_descriptor_t *td,
 	/* X.691, #12.2.2 */
 	if(ct && ct->range_bits >= 0) {
 		/* #10.5.6 */
-		ASN_DEBUG("Encoding integer with range %d bits",
-				  ct->range_bits);
+		ASN_DEBUG("Encoding integer %ld (%lu) with range %d bits",
+			value, value - ct->lower_bound, ct->range_bits);
+		unsigned long v = value - ct->lower_bound;
 
 		/* #12 <= 8 -> alignment ? */
 		if (ct->range_bits < 8) {
-			if(per_put_few_bits(po, 0x00 | value, ct->range_bits))
+			if(per_put_few_bits(po, 0x00 | v, ct->range_bits))
 				_ASN_ENCODE_FAILED;
 		} else if (ct->range_bits == 8) {
 			if(aper_put_align(po) < 0)
 				_ASN_ENCODE_FAILED;
-			if(per_put_few_bits(po, 0x00 | value, ct->range_bits))
+			if(per_put_few_bits(po, 0x00 | v, ct->range_bits))
 				_ASN_ENCODE_FAILED;
 		} else if (ct->range_bits <= 16) {
 			// Consume the bytes to align on octet
 			if(aper_put_align(po) < 0)
 				_ASN_ENCODE_FAILED;
-			if(per_put_few_bits(po, 0x0000 | value,
+			if(per_put_few_bits(po, 0x0000 | v,
 				16))
 				_ASN_ENCODE_FAILED;
 		} else {
 			/* TODO: extend to >64 bits */
-			int64_t v = value;
+			int64_t v64 = v;
 			int i;
 
 			/* Putting length - 1 in the minimum number of bits ex: 5 = 3bits */
@@ -1005,7 +1006,7 @@ INTEGER_encode_aper(asn_TYPE_descriptor_t *td,
 				_ASN_ENCODE_FAILED;
 			/* Put the value */
 			for (i = 0; i < st->size; i++) {
-				if(per_put_few_bits(po, (v >> (8 * (st->size - i - 1))) & 0xff, 8)) _ASN_ENCODE_FAILED;
+				if(per_put_few_bits(po, (v64 >> (8 * (st->size - i - 1))) & 0xff, 8)) _ASN_ENCODE_FAILED;
 			}
 		}
 		_ASN_ENCODED_OK(er);
