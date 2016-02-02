@@ -90,6 +90,13 @@ int BIT_STRING_fromBuf(BIT_STRING_t *st, const uint8_t *str, unsigned int bit_le
 	return 0;
 }
 
+void asn1_u32_to_str(OCTET_STRING_t *str, uint32_t *buf, uint32_t in)
+{
+	*buf = htonl(in);
+	str->buf = (uint8_t *) buf;
+	str->size = sizeof(uint32_t);
+}
+
 void asn1_u16_to_str(OCTET_STRING_t *str, uint16_t *buf, uint16_t in)
 {
 	*buf = htons(in);
@@ -115,6 +122,12 @@ int asn1_strncpy(char *out, const OCTET_STRING_t *in, size_t n)
 	out[cpylen] = '\0';
 
 	return cpylen;
+}
+
+uint32_t asn1str_to_u32(const OCTET_STRING_t *in)
+{
+	OSMO_ASSERT(in && in->size == sizeof(uint32_t));
+	return ntohl(*(uint32_t *)in->buf);
 }
 
 uint16_t asn1str_to_u16(const OCTET_STRING_t *in)
