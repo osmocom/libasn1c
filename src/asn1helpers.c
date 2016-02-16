@@ -73,7 +73,7 @@ int BIT_STRING_fromBuf(BIT_STRING_t *st, const uint8_t *str, unsigned int bit_le
 	}
 
 	if (len < 0)
-		len = strlen(str);
+		len = strlen((char*)str);
 
 	buf = MALLOC(len);
 	if (!buf) {
