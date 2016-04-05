@@ -22,10 +22,14 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
-#include <osmocom/core/utils.h>
-
 #include "asn1helpers.h"
 #include "asn_internal.h"
+
+#define ASN1C_ASSERT(exp)    \
+        if (!(exp)) { \
+                fprintf(stderr, "Assert failed %s %s:%d\n", #exp, __FILE__, __LINE__); \
+                abort(); \
+        }
 
 void asn1_u32_to_bitstring(BIT_STRING_t *bitstr, uint32_t *buf, uint32_t in)
 {
@@ -126,39 +130,39 @@ int asn1_strncpy(char *out, const OCTET_STRING_t *in, size_t n)
 
 uint32_t asn1str_to_u32(const OCTET_STRING_t *in)
 {
-	OSMO_ASSERT(in && in->size == sizeof(uint32_t));
+	ASN1C_ASSERT(in && in->size == sizeof(uint32_t));
 	return ntohl(*(uint32_t *)in->buf);
 }
 
 uint16_t asn1str_to_u16(const OCTET_STRING_t *in)
 {
-	OSMO_ASSERT(in && in->size == sizeof(uint16_t));
+	ASN1C_ASSERT(in && in->size == sizeof(uint16_t));
 	return ntohs(*(uint16_t *)in->buf);
 }
 
 uint8_t asn1str_to_u8(const OCTET_STRING_t *in)
 {
-	OSMO_ASSERT(in && in->size == sizeof(uint8_t));
+	ASN1C_ASSERT(in && in->size == sizeof(uint8_t));
 	return *(uint8_t *)in->buf;
 }
 
 uint32_t asn1bitstr_to_u32(const BIT_STRING_t *in)
 {
-	OSMO_ASSERT(in && in->size == sizeof(uint32_t));
+	ASN1C_ASSERT(in && in->size == sizeof(uint32_t));
 
 	return ntohl(*(uint32_t *)in->buf);
 }
 
 uint32_t asn1bitstr_to_u28(const BIT_STRING_t *in)
 {
-	OSMO_ASSERT(in && in->size == sizeof(uint32_t) && in->bits_unused == 4);
+	ASN1C_ASSERT(in && in->size == sizeof(uint32_t) && in->bits_unused == 4);
 
 	return ntohl(*(uint32_t *)in->buf) >> 4;
 }
 
 uint32_t asn1bitstr_to_u24(const BIT_STRING_t *in)
 {
-	OSMO_ASSERT(in && in->size == 3);
+	ASN1C_ASSERT(in && in->size == 3);
 
 	return ntohl(*(uint32_t *)in->buf) >> 8;
 }
