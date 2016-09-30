@@ -1,6 +1,9 @@
 AC_INIT([libasn1c], [0.9.28],
         [openbsc-devel@lists.openbsc.org])
 
+dnl  *This* is the root dir, even if an install-sh exists in ../ or ../../
+AC_CONFIG_AUX_DIR([.])
+
 AM_INIT_AUTOMAKE([dist-bzip2])
 
 dnl kernel style compile messages
