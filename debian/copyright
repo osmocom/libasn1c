@@ -4,17 +4,17 @@ Source: git://git.osmocom.org/libasn1c
 
 Files: *
 Copyright: 2005-2014 Lev Walkin <vlm@lionet.info>
-License: BSD-3-Clause
+License: BSD-2-Clause
 
 Files: src/xer_support.c
 Copyright: 2003,2004 X/IO Labs, xiolabs.com.
            2003,2004,2005 Lev Walkin <vlm@lionet.info>.
-License: BSD-3-Clause
+License: BSD-2-Clause
 
 Files: include/asn1c/xer_support.h
 Copyright: 2003,2004 X/IO Labs, xiolabs.com
            2003,2004 Lev Walkin <vlm@lionet.info>
-License: BSD-3-Clause
+License: BSD-2-Clause
 
 Files: src/asn1helpers.c
 Copyright: 2014-2015 by Harald Welte <laforge@gnumonks.org>
