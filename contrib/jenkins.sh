@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # jenkins build helper script for libasn1c.  This is how we build on jenkins.osmocom.org
 
+set -e
+
 set +x
 echo
 echo
