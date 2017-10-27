@@ -23,6 +23,6 @@ uint32_t asn1bitstr_to_u24(const BIT_STRING_t *in);
 
 static inline void OCTET_STRING_noalloc(OCTET_STRING_t *s, const uint8_t *str, int size)
 {
-	s->buf = str;
+	s->buf = (uint8_t *) str;
 	s->size = size;
 }
