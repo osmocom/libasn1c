@@ -2,6 +2,7 @@
 # jenkins build helper script for libasn1c.  This is how we build on jenkins.osmocom.org
 
 set -e
+osmo-clean-workspace.sh
 
 set +x
 echo
@@ -16,3 +17,5 @@ autoreconf --install --force
 $MAKE $PARALLEL_MAKE
 $MAKE distcheck \
   || cat-testlogs.sh
+
+osmo-clean-workspace.sh
