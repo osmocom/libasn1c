@@ -11,6 +11,6 @@ endif
 
 lib_LTLIBRARIES = libasn1c.la
 
-libasn1c_la_LDFLAGS = $(LIBTALLOC_LIBS)
+libasn1c_la_LDFLAGS = $(LIBTALLOC_LIBS) -lm
 libasn1c_la_SOURCES = ANY.c              constraints.c         GeneralizedTime.c   NumericString.c      T61String.c asn_codecs_prim.c  constr_CHOICE.c       GeneralString.c     ObjectDescriptor.c   TeletexString.c asn_SEQUENCE_OF.c  constr_SEQUENCE.c     GraphicString.c     OBJECT_IDENTIFIER.c  UniversalString.c asn_SET_OF.c       constr_SEQUENCE_OF.c  IA5String.c         OCTET_STRING.c       UTCTime.c ber_decoder.c      constr_SET.c          INTEGER.c           per_decoder.c        UTF8String.c ber_tlv_length.c   constr_SET_OF.c       ISO646String.c      per_encoder.c        VideotexString.c ber_tlv_tag.c      constr_TYPE.c         NativeEnumerated.c  per_support.c        VisibleString.c BIT_STRING.c       NativeInteger.c     PrintableString.c    xer_decoder.c BMPString.c        der_encoder.c         NativeReal.c        REAL.c               xer_encoder.c BOOLEAN.c          ENUMERATED.c          NULL.c              RELATIVE-OID.c       xer_support.c	per_opentype.c        asn1helpers.c
 

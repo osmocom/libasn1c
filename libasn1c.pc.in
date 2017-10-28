@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: asn1c runtime library
 Description: C Utility Library
 Version: @VERSION@
-Libs: -L${libdir} @LIBTALLOC_LIBS@ -lasn1c -lm
+Libs: -L${libdir} @LIBTALLOC_LIBS@ -lasn1c
 Cflags: -I${includedir}/ -I${includedir}/asn1c @LIBTALLOC_CFLAGS@
 
