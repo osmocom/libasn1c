@@ -13,7 +13,7 @@ echo
 set -x
 
 autoreconf --install --force
-./configure CFLAGS="-Werror" CPPFLAGS="-Werror"
+./configure --enable-werror
 $MAKE $PARALLEL_MAKE
 $MAKE distcheck \
   || cat-testlogs.sh
