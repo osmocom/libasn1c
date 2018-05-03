@@ -32,7 +32,10 @@
 # Vendor-related variables such as DEB_VENDOR:
 #include /usr/share/dpkg/vendor.mk
 # Package-related variables such as DEB_DISTRIBUTION
-#include /usr/share/dpkg/pkg-info.mk
+include /usr/share/dpkg/pkg-info.mk
+
+VERSION := $(shell echo '$(DEB_VERSION)' | sed -e 's/[+-].*//' -e 's/~//g')
+
 #
 # You may alternatively set them susing a simple script such as:
 # DEB_VENDOR ?= $(shell dpkg-vendor --query  Vendor)
@@ -43,6 +46,10 @@
 # main packaging script based on dh7 syntax
 %:
 	dh $@ --with autoreconf
+
+override_dh_autoreconf:
+	echo $(VERSION) > .tarball-version
+	dh_autoreconf
 
 # debmake generated override targets
 # Set options for ./configure
