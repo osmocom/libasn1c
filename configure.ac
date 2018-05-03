@@ -1,4 +1,5 @@
-AC_INIT([libasn1c], [0.9.28],
+AC_INIT([libasn1c],
+        m4_esyscmd([./git-version-gen .tarball-version]),
         [openbsc-devel@lists.openbsc.org])
 
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -75,4 +76,3 @@ AC_OUTPUT(
         include/Makefile
         include/asn1c/Makefile
         Makefile)
-
