@@ -1,3 +1,23 @@
+libasn1c (0.9.29) unstable; urgency=medium
+
+  [ Harald Welte ]
+  * link libasn1c against libmath, don't ask users to do it
+
+  [ Neels Hofmeyr ]
+  * fix compiler warning: drop dead code from BIT_STRING_fromBuf()
+  * jenkins: add missing set -e to catch build errors
+  * jenkins: use osmo-clean-workspace.sh before and after build
+  * add --enable-sanitize config option
+  * configure: add --enable-werror
+  * jenkins.sh: use --enable-werror configure flag, not CFLAGS
+
+  [ Pau Espin Pedrol ]
+  * .gitignore: add compile
+  * build: Support make release target
+  * debian/changelog: Set previous versions to unstable
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Thu, 03 May 2018 17:18:02 +0200
+
 libasn1c (0.9.28) unstable; urgency=low
 
   * Initial release.
