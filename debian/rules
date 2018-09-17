@@ -47,10 +47,6 @@ VERSION := $(shell echo '$(DEB_VERSION)' | sed -e 's/[+-].*//' -e 's/~//g')
 %:
 	dh $@ --with autoreconf
 
-override_dh_autoreconf:
-	echo $(VERSION) > .tarball-version
-	dh_autoreconf
-
 # debmake generated override targets
 # Set options for ./configure
 #CONFIGURE_FLAGS = <options for ./configure>
