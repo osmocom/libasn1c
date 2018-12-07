@@ -14,7 +14,10 @@ set -x
 
 autoreconf --install --force
 ./configure --enable-werror
-$MAKE $PARALLEL_MAKE
+
+# Parallel make is disabled due to a race condition. On Jenkins, it often
+# aborts the build with: "asn1p_y.y:357:13: error: 'param' undeclared"
+$MAKE -j1
 $MAKE distcheck \
   || cat-testlogs.sh
 
