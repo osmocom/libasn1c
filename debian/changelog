@@ -1,3 +1,16 @@
+libasn1c (0.9.32) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * debian/rules: Don't overwrite .tarball-version
+  * Fix LIBVERSION not applied
+
+  [ Oliver Smith ]
+  * jenkins.sh: disable parallel build
+  * Revert "jenkins.sh: disable parallel build"
+  * contrib/jenkins.sh: run "make maintainer-clean"
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Wed, 07 Aug 2019 13:26:10 +0200
+
 libasn1c (0.9.31) unstable; urgency=medium
 
   [ Alexander Couzens ]
