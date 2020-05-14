@@ -12,12 +12,8 @@
 # license that conforms to the Open Source Definition (Version 1.9)
 # published by the Open Source Initiative.
 
-# Please submit bugfixes or comments via http://bugs.opensuse.org/
-#
-
-
 Name:           libasn1c
-Version:        0.9.32.0
+Version:        0.0.0
 Release:        0
 Summary:        Osmocon ASN.1 decoder and encoder library
 License:        BSD-2-Clause
