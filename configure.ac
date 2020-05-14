@@ -75,4 +75,5 @@ AC_OUTPUT(
         src/Makefile
         include/Makefile
         include/asn1c/Makefile
-        Makefile)
+        Makefile
+        contrib/libasn1c.spec)

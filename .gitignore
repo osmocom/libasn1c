@@ -21,3 +21,5 @@ libasn1c.pc
 *.la
 .deps
 .libs
+
+contrib/libasn1c.spec
