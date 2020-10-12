@@ -15,8 +15,8 @@ set -x
 autoreconf --install --force
 ./configure --enable-werror
 $MAKE $PARALLEL_MAKE
-$MAKE distcheck \
+$MAKE $PARALLEL_MAKE distcheck \
   || cat-testlogs.sh
-$MAKE maintainer-clean
+$MAKE $PARALLEL_MAKE maintainer-clean
 
 osmo-clean-workspace.sh
