@@ -1,3 +1,17 @@
+libasn1c (0.9.33) unstable; urgency=medium
+
+  [ Oliver Smith ]
+  * contrib: import RPM spec
+  * contrib: integrate RPM spec
+
+  [ Vadim Yanitskiy ]
+  * debian/control: change maintainer to the Osmocom team / mailing list
+
+  [ Pau Espin Pedrol ]
+  * contrib/jenkins: Enable parallel make in make distcheck
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 23 Feb 2021 16:52:29 +0100
+
 libasn1c (0.9.32) unstable; urgency=medium
 
   [ Pau Espin Pedrol ]
