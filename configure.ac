@@ -20,6 +20,11 @@ AC_PROG_LIBTOOL
 
 AC_CONFIG_MACRO_DIR([m4])
 
+dnl patching ${archive_cmds} to affect generation of file "libtool" to fix linking with clang
+AS_CASE(["$LD"],[*clang*],
+  [AS_CASE(["${host_os}"],
+     [*linux*],[archive_cmds='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname -o $lib'])])
+
 PKG_CHECK_MODULES(LIBTALLOC, talloc)
 
 AC_ARG_ENABLE(sanitize,
