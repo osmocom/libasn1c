@@ -1,3 +1,10 @@
+libasn1c (0.9.34) unstable; urgency=medium
+
+  [ Eric ]
+  * configure.ac: fix libtool issue with clang and sanitizer
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 28 Jun 2022 16:03:31 +0200
+
 libasn1c (0.9.33) unstable; urgency=medium
 
   [ Oliver Smith ]
