@@ -1,3 +1,10 @@
+libasn1c (0.9.35) unstable; urgency=medium
+
+  [ Neels Hofmeyr ]
+  * fix 3 indents to avoid build failure with -Werror
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 07 Feb 2023 14:09:40 +0100
+
 libasn1c (0.9.34) unstable; urgency=medium
 
   [ Eric ]
