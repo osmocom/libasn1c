@@ -4,7 +4,7 @@ Replaces: osmo-libasn1c
 Section: libs
 Priority: extra
 Maintainer: Osmocom team <openbsc@lists.osmocom.org>
-Build-Depends: debhelper (>=9),
+Build-Depends: debhelper (>= 10),
                dh-autoreconf,
                libtalloc-dev
 Standards-Version: 3.9.8
