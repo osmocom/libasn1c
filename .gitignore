@@ -8,6 +8,7 @@ autom4te.cache
 aclocal.m4
 config.*
 configure
+configure~
 compile
 depcomp
 libtool
