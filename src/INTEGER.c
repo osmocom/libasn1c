@@ -1336,16 +1336,12 @@ asn_int642INTEGER(INTEGER_t *st, int64_t value) {
 		}
 		break;
 	}
-#if __GNUC__ == 10
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
-#endif
 	/* Copy the integer body */
 	for(pstart = p, bp = buf, pend1 += add; p != pend1; p += add)
 		*bp++ = *p;
-#if __GNUC__ == 10
 #pragma GCC diagnostic pop
-#endif
 
 	if(st->buf) FREEMEM(st->buf);
 	st->buf = buf;
@@ -1398,16 +1394,12 @@ asn_long2INTEGER(INTEGER_t *st, long value) {
 		}
 		break;
 	}
-#if __GNUC__ == 10
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
-#endif
 	/* Copy the integer body */
 	for(pstart = p, bp = buf, pend1 += add; p != pend1; p += add)
 		*bp++ = *p;
-#if __GNUC__ == 10
 #pragma GCC diagnostic pop
-#endif
 
 	if(st->buf) FREEMEM(st->buf);
 	st->buf = buf;
