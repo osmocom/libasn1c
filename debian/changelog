@@ -1,3 +1,20 @@
+libasn1c (0.9.36) unstable; urgency=medium
+
+  [ Oliver Smith ]
+  * debian/control: replace, conflict: osmo-libasn1c
+  * INTEGER: ignore invalid -Warray-bounds from GCC-10
+  * debian: set compat level to 10
+  * INTEGER: ignore warning for all GCC versions
+
+  [ Vadim Yanitskiy ]
+  * src/Makefile.am: libraries shall not be in LDFLAGS but in LIBADD
+
+  [ Pau Espin Pedrol ]
+  * .gitignore: Add configure~
+  * Disable _ASN_STACK_OVERFLOW_CHECK if building with Asan enabled
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 12 Sep 2023 12:34:28 +0200
+
 libasn1c (0.9.35) unstable; urgency=medium
 
   [ Neels Hofmeyr ]
