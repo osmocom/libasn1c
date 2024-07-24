@@ -1,3 +1,13 @@
+libasn1c (0.9.37) unstable; urgency=medium
+
+  [ Harald Welte ]
+  * Add README.md to explain what this is all about
+
+  [ Oliver Smith ]
+  * contrib: remove rpm spec file
+
+ -- Oliver Smith <osmith@sysmocom.de>  Wed, 24 Jul 2024 14:52:06 +0200
+
 libasn1c (0.9.36) unstable; urgency=medium
 
   [ Oliver Smith ]
