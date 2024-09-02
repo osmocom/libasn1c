@@ -598,7 +598,7 @@ SET_encode_aper(asn_TYPE_descriptor_t *td,
 	int t2m_build_own = (specs->tag2el_count != td->elements_count);
 	const asn_TYPE_tag2member_t *t2m;
 	asn_TYPE_tag2member_t *t2m_build;
-	int t2m_count;
+	int t2m_count = 0;
 
 	(void)constraints;
 
@@ -616,7 +616,6 @@ SET_encode_aper(asn_TYPE_descriptor_t *td,
 		t2m_build = (asn_TYPE_tag2member_t *)alloca(
 			td->elements_count * sizeof(t2m[0]));
 		if(!t2m_build) _ASN_ENCODE_FAILED; /* There are such platforms */
-		t2m_count = 0;
 	} else {
 		t2m_build = NULL;
 		/*
