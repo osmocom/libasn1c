@@ -1798,10 +1798,11 @@ OCTET_STRING_encode_uper(asn_TYPE_descriptor_t *td,
 			ret = OCTET_STRING_per_put_characters(po, st->buf,
 				sizeinunits, bpc, unit_bits,
 				cval->lower_bound, cval->upper_bound, pc);
-		} else {
+		} else if (st->buf) {
 			ret = per_put_many_bits(po, st->buf,
 				sizeinunits * unit_bits);
-		}
+		} else
+			_ASN_ENCODE_FAILED;
 		if(ret) _ASN_ENCODE_FAILED;
 		_ASN_ENCODED_OK(er);
 	}
