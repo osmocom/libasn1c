@@ -1077,6 +1077,7 @@ CHOICE_encode_aper(asn_TYPE_descriptor_t *td,
 	asn_per_constraint_t *ct;
 	void *memb_ptr;
 	int present;
+	asn_enc_rval_t rval;
 
 	if(!sptr) _ASN_ENCODE_FAILED;
 
@@ -1136,18 +1137,18 @@ CHOICE_encode_aper(asn_TYPE_descriptor_t *td,
 
 		return elm->type->aper_encoder(elm->type, elm->per_constraints,
 									   memb_ptr, po);
-	} else {
-		asn_enc_rval_t rval;
-		if(specs->ext_start == -1)
-			_ASN_ENCODE_FAILED;
+	}
+
+	if(specs->ext_start == -1)
+		_ASN_ENCODE_FAILED;
+	if (ct) {
 		if(aper_put_nsnnwn(po, ct->range_bits, present - specs->ext_start))
 			_ASN_ENCODE_FAILED;
-		if(aper_open_type_put(elm->type, elm->per_constraints,
-			memb_ptr, po))
-			_ASN_ENCODE_FAILED;
-		rval.encoded = 0;
-		_ASN_ENCODED_OK(rval);
 	}
+	if(aper_open_type_put(elm->type, elm->per_constraints, memb_ptr, po))
+		_ASN_ENCODE_FAILED;
+	rval.encoded = 0;
+	_ASN_ENCODED_OK(rval);
 }
 
 int
