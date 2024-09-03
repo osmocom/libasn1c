@@ -490,6 +490,9 @@ per_put_few_bits(asn_per_outp_t *po, uint32_t bits, int obits) {
 		buf[2] = bits >> 8,
 		buf[3] = bits;
 	else {
+		/* sanity: prevent negative bitshift (CID#27206) */
+		if (obits < 24)
+			return -1;
 		per_put_few_bits(po, bits >> (obits - 24), 24);
 		per_put_few_bits(po, bits, obits - 24);
 	}
