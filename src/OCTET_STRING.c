@@ -1699,6 +1699,7 @@ OCTET_STRING_encode_uper(asn_TYPE_descriptor_t *td,
 	unsigned int unit_bits;
 	unsigned int canonical_unit_bits;
 	unsigned int sizeinunits;
+	unsigned int unused;
 	const uint8_t *buf;
 	int ret;
 	enum {
@@ -1728,7 +1729,11 @@ OCTET_STRING_encode_uper(asn_TYPE_descriptor_t *td,
 	case ASN_OSUBV_BIT:
 		canonical_unit_bits = unit_bits = 1;
 		bpc = OS__BPC_BIT;
-		sizeinunits = st->size * 8 - (st->bits_unused & 0x07);
+		sizeinunits = st->size * 8;
+		/* make sure sizeinunits cannot wrap past zero (especially when st->size == 0). */
+		unused = st->bits_unused & 0x07;
+		if (unused <= sizeinunits)
+			sizeinunits -= unused;
 		ASN_DEBUG("BIT STRING of %d bytes, %d bits unused",
 				sizeinunits, st->bits_unused);
 		break;
@@ -1827,8 +1832,10 @@ OCTET_STRING_encode_uper(asn_TYPE_descriptor_t *td,
 			ret = OCTET_STRING_per_put_characters(po, buf,
 				maySave, bpc, unit_bits,
 				cval->lower_bound, cval->upper_bound, pc);
-		} else {
+		} else if (buf) {
 			ret = per_put_many_bits(po, buf, maySave * unit_bits);
+		} else {
+			_ASN_ENCODE_FAILED;
 		}
 		if(ret) _ASN_ENCODE_FAILED;
 
