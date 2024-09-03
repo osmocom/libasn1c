@@ -1859,6 +1859,7 @@ OCTET_STRING_encode_aper(asn_TYPE_descriptor_t *td,
         unsigned int unit_bits;
         unsigned int canonical_unit_bits;
         unsigned int sizeinunits;
+        unsigned int unused;
         const uint8_t *buf;
         int ret;
         enum {
@@ -1888,7 +1889,11 @@ OCTET_STRING_encode_aper(asn_TYPE_descriptor_t *td,
         case ASN_OSUBV_BIT:
                 canonical_unit_bits = unit_bits = 1;
                 bpc = OS__BPC_BIT;
-                sizeinunits = st->size * 8 - (st->bits_unused & 0x07);
+                sizeinunits = st->size * 8;
+                /* make sure sizeinunits cannot wrap past zero (especially when st->size == 0). */
+                unused = st->bits_unused & 0x07;
+                if (unused <= sizeinunits)
+                        sizeinunits -= unused;
                 ASN_DEBUG("BIT STRING of %d bytes",
                                 sizeinunits);
 		break;
@@ -1994,6 +1999,9 @@ OCTET_STRING_encode_aper(asn_TYPE_descriptor_t *td,
 				maySave, bpc, unit_bits,
 				cval->lower_bound, cval->upper_bound, pc);
 		} else {
+			/* coverity CID#57681: st->buf can be NULL, but above, we've verified that when st->buf == NULL,
+			 * then also st->size == 0, and hence sizeinunits == 0, hence this 'while' will skip entirely,
+			 * and hence it is safe to dereference buf here. */
 			ret = per_put_many_bits(po, buf, maySave * unit_bits);
 		}
 		if(ret) _ASN_ENCODE_FAILED;
