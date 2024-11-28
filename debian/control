@@ -6,6 +6,7 @@ Priority: extra
 Maintainer: Osmocom team <openbsc@lists.osmocom.org>
 Build-Depends: debhelper (>= 10),
                dh-autoreconf,
+               pkg-config,
                libtalloc-dev
 Standards-Version: 3.9.8
 Vcs-Git: git://git.osmocom.org/libasn1c.git
