@@ -1,3 +1,9 @@
+libasn1c (0.9.38) unstable; urgency=medium
+
+  * debian/control: Build-Depends: add pkg-config
+
+ -- Oliver Smith <osmith@sysmocom.de>  Mon, 02 Dec 2024 09:41:20 +0100
+
 libasn1c (0.9.37) unstable; urgency=medium
 
   [ Harald Welte ]
