@@ -1,3 +1,10 @@
+libasn1c (0.9.39) unstable; urgency=medium
+
+  [ n0k0 ]
+  * constr_CHOICE: fix always-true bounds check
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Fri, 21 Aug 2026 11:30:10 +0200
+
 libasn1c (0.9.38) unstable; urgency=medium
 
   * debian/control: Build-Depends: add pkg-config
